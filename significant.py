@@ -82,6 +82,13 @@ def means_dataframe(model):
     means_df.drop(means_df.columns[[1,2]], axis='columns', inplace=True)
     return(means_df)
 
+# SEARCHING GENE SYMBOL
+def symbol_gene(gene_dict, entrez_id):
+    if entrez_id in gene_dict.keys():
+        symbol=gene_dict[entrez_id]
+    else:
+        symbol='Not found'  
+    return(symbol)
 
     
 def main():
@@ -92,6 +99,9 @@ def main():
     target_genes_df=target_genes(path_target_genes_list)
     df=dataframe(path_input, args)
     df.to_csv(f'{path_output}/{input_filename}_{args.parametr}.csv', index=False, sep='\t')
+    df_tot_transcripts=pd.read_table(f'{path_TRANSPARENT}/tot_transcripts.txt', header=None, sep=' ')
+    df_tot_transcripts.columns=['GENE_ID', 'SYMBOL', 'MEAN']
+    gene_dict=pd.Series(df_tot_transcripts.SYMBOL.values, index=df_tot_transcripts.GENE_ID).to_dict()
     f=open(f'{path_output}/{input_filename}_{args.parametr}_genes.txt', 'w')
     cont=0
     while cont < len(df):
@@ -102,7 +112,7 @@ def main():
         means_genes_df.sort_values(by=['GENE_ID'], inplace=True)
         f.write(f'- {df.iloc[cont, 0]}, {df.iloc[cont, 1]}, {df.iloc[cont, 2]}\n')
         for row in range(len(means_genes_df)):
-            f.write(f'\t{means_genes_df.iloc[row, 0]}, {means_genes_df.iloc[row, 1]}\n')
+            f.write(f'\t{means_genes_df.iloc[row, 0]}, {symbol_gene(gene_dict, means_genes_df.iloc[row, 0])}, {means_genes_df.iloc[row, 1]}\n')
         cont+=1
     f.close()
     print('DONE')
